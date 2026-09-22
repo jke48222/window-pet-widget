@@ -1,0 +1,21 @@
+// Fallback window snapshot without a compiled helper: one JSON object on stdout.
+ObjC.import('CoreGraphics'); ObjC.import('AppKit');
+const opts = $.kCGWindowListOptionOnScreenOnly | $.kCGWindowListExcludeDesktopElements;
+const ref = $.CGWindowListCopyWindowInfo(opts, $.kCGNullWindowID);
+const list = ref ? ObjC.castRefToObject(ref).js : [];
+const windows = []; let z = 0;
+for (const item of list) {
+  const d = ObjC.deepUnwrap(item) || {};
+  if (d.kCGWindowLayer !== 0) continue;
+  if ((d.kCGWindowAlpha == null ? 1 : d.kCGWindowAlpha) <= 0.05) continue;
+  const b = d.kCGWindowBounds; if (!b || b.Width < 120 || b.Height < 60) continue;
+  windows.push({ id: d.kCGWindowNumber, pid: d.kCGWindowOwnerPID, x: b.X, y: b.Y, w: b.Width, h: b.Height, z: z++ });
+}
+const screens = $.NSScreen.screens; const n = screens.count; const displays = [];
+const ph = screens.objectAtIndex(0).frame.size.height;
+for (let i = 0; i < n; i++) {
+  const s = screens.objectAtIndex(i); const f = s.frame, v = s.visibleFrame;
+  displays.push({ id: i, x: f.origin.x, y: ph - (f.origin.y + f.size.height), w: f.size.width, h: f.size.height,
+                  vx: v.origin.x, vy: ph - (v.origin.y + v.size.height), vw: v.size.width, vh: v.size.height, main: i === 0 });
+}
+JSON.stringify({ t: Date.now() / 1000, windows, displays });
