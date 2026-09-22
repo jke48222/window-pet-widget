@@ -366,6 +366,7 @@ const PALETTES = ["midnight", "sakura", "seafoam", "tinplate"];
 const FRAMES = { idle: 3, walk: 10, look: 3, fidget: 4, blink: 1, jump: 1, fall: 2, land: 2, sleep: 2 };
 const FPS = { idle: 3, walk: 12, look: 4, fidget: 6, blink: 8, jump: 1, fall: 8, land: 8, sleep: 1.2 };
 const PORT = 41727;
+const FONTS = "window-pet.widget/fonts";
 
 export const command = String.raw`W="$HOME/.config/widgetsuite/windowd"; if [ -x "$W" ]; then "$W" --once; else osascript -l JavaScript <<'JXA'
 // Fallback window snapshot without a compiled helper: one JSON object on stdout.
@@ -401,13 +402,19 @@ export const className = `
   .pet img { display:block; width:100%; height:100%; image-rendering: pixelated; -webkit-user-drag: none; }
   .pet.flip img { transform: scaleX(-1); }
   .shadow { position:absolute; left:18%; right:18%; bottom:-3px; height:6px; border-radius:50%; background: rgba(0,0,0,0.28); filter: blur(2px); }
-  .bubble { position:absolute; left:50%; bottom:100%; transform: translate(-50%, -8px); white-space:nowrap;
-            font-family:${mono}; font-size:9px; letter-spacing:1px; text-transform:uppercase; color:${T.ink};
-            background:${T.cardLight}; backdrop-filter: blur(12px); padding:6px 9px; border-radius:9px;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.05); animation: wp-pop .25s ease-out; }
-  .bubble::after { content:""; position:absolute; left:50%; top:100%; margin-left:-4px; border:4px solid transparent; border-top-color:${T.cardLight}; }
-  .bubble.alert { color:${T.tintOrange}; }
-  @keyframes wp-pop { from { opacity:0; transform: translate(-50%, 0) scale(0.9); } to { opacity:1; transform: translate(-50%, -8px) scale(1); } }
+  @font-face { font-family: "Press Start 2P"; src: url("${FONTS}/PressStart2P-400.woff2") format("woff2"); }
+  .bubble { position:absolute; left:50%; bottom:100%; transform: translate(-50%, -12px); white-space:nowrap;
+            font: 7px/1.5 "Press Start 2P", monospace; text-transform:uppercase; color:#1D1D1B; background:#FFF8E7; padding: 7px 9px 5px;
+            box-shadow: 0 0 0 2px #1D1D1B, 0 0 0 4px #FFF8E7, 0 0 0 6px #1D1D1B, 6px 8px 0 4px rgba(0,0,0,0.35); animation: wp-pop .18s steps(3, end); }
+  .bubble::after { content:""; position:absolute; left:50%; top:100%; width:6px; height:6px; margin: 6px 0 0 -3px; background:#FFF8E7; box-shadow: 0 0 0 2px #1D1D1B, 0 6px 0 -1px #1D1D1B; }
+  .bubble.alert { background:#FFD98A; }
+  .bubble.alert::after { background:#FFD98A; }
+  @keyframes wp-pop { from { opacity:0; transform: translate(-50%, -4px); } to { opacity:1; transform: translate(-50%, -12px); } }
+  .zz { position:absolute; left: 70%; bottom: 90%; font: 8px/1 "Press Start 2P", monospace; color:#FFF8E7; text-shadow: 1px 1px 0 #1D1D1B, -1px -1px 0 #1D1D1B, 1px -1px 0 #1D1D1B, -1px 1px 0 #1D1D1B; animation: wp-zz 2.4s steps(6, end) infinite; opacity:0; }
+  .zz:nth-child(2) { animation-delay: .8s; } .zz:nth-child(3) { animation-delay: 1.6s; }
+  @keyframes wp-zz { 0% { opacity:0; transform: translate(0,0); } 15% { opacity:1; } 100% { opacity:0; transform: translate(14px, -26px); } }
+  .dust { position:absolute; bottom: -2px; left: 50%; width: 5px; height: 5px; background: rgba(230,226,216,0.9); box-shadow: 0 0 0 1px rgba(0,0,0,0.25); animation: wp-dust .45s steps(5, end) forwards; }
+  @keyframes wp-dust { 0% { opacity:1; transform: translate(0, 0); } 100% { opacity:0; transform: translate(var(--dx), -10px) scale(1.6); } }
   @media (prefers-reduced-motion: reduce) { .bubble { animation:none; } }
 `;
 
@@ -531,8 +538,8 @@ const Engine = (() => {
         pet.x = Math.max(S * 0.35, Math.min(innerWidth - S * 0.35, pet.x));
         if (pet.vy > 0) {
           const land = under(pet.x, py, pet.y);
-          if (land) { pet.y = land.y; pet.on = land.id; pet.onWin = land.win; pet.vx = 0; pet.vy = 0; setState("land", "land"); }
-          else if (pet.y >= floorY) { pet.y = floorY; pet.on = "floor"; pet.onWin = null; pet.vx = 0; pet.vy = 0; setState("land", "land"); }
+          if (land) { pet.y = land.y; pet.on = land.id; pet.onWin = land.win; pet.vx = 0; pet.vy = 0; pet.lands = (pet.lands || 0) + 1; setState("land", "land"); }
+          else if (pet.y >= floorY) { pet.y = floorY; pet.on = "floor"; pet.onWin = null; pet.vx = 0; pet.vy = 0; pet.lands = (pet.lands || 0) + 1; setState("land", "land"); }
         }
         break;
       }
@@ -566,13 +573,13 @@ function Pet() {
   const [, force] = React.useReducer((x) => x + 1, 0);
   React.useEffect(() => {
     preload(Engine.cfg.palette); Engine.start();
-    let lastAnim = "", lastFrame = -1, lastFlip = null, lastBubble = null;
+    let lastAnim = "", lastFrame = -1, lastFlip = null, lastBubble = null, lastState = "";
     return Engine.sub(() => {
       const p = Engine.pet, S = Engine.cfg.size, el = ref.current; if (!el) return;
       el.style.width = S + "px"; el.style.height = S + "px";
       el.style.transform = `translate3d(${Math.round(p.x - S / 2)}px, ${Math.round(p.y - S)}px, 0)`;
       const flip = p.dir < 0;
-      if (p.anim !== lastAnim || p.frame !== lastFrame || flip !== lastFlip || p.bubble !== lastBubble) { lastAnim = p.anim; lastFrame = p.frame; lastFlip = flip; lastBubble = p.bubble; force(); }
+      if (p.anim !== lastAnim || p.frame !== lastFrame || flip !== lastFlip || p.bubble !== lastBubble || p.state !== lastState) { lastAnim = p.anim; lastFrame = p.frame; lastFlip = flip; lastBubble = p.bubble; lastState = p.state; force(); }
     });
   }, []);
   const p = Engine.pet, pal = Engine.cfg.palette;
@@ -581,6 +588,8 @@ function Pet() {
       {p.on ? <div className="shadow" /> : null}
       <img src={`${SPR}/${pal}/${p.anim}_${p.frame}.png`} alt="" draggable={false} />
       {p.bubble ? <div className={`bubble ${p.bubble.kind || ""}`}>{p.bubble.text}</div> : null}
+      {p.state === "sleep" ? <><span className="zz">z</span><span className="zz">z</span><span className="zz">z</span></> : null}
+      {p.state === "land" ? [-16, -6, 6, 16].map((dx, i) => <i key={`${p.lands}-${i}`} className="dust" style={{ "--dx": `${dx}px`, marginLeft: `${dx / 2}px` }} />) : null}
     </div>
   );
 }
