@@ -131,7 +131,7 @@ const card = (variant, w, h, x = 0, y = 0) => `
   .ws-drag  { position:absolute; top:6px; left:6px; z-index:30;
               width:18px; height:18px; border-radius:6px;
               display:flex; align-items:center; justify-content:center;
-              font-size:11px; line-height:1; cursor:grab; opacity:0.42;
+              font-size:11px; line-height:1; cursor:grab; opacity:0.22;
               transition:opacity .15s ease; user-select:none;
               -webkit-user-select:none;
               color:${variant === "dark" ? T.onDarkMute : T.inkMute};
@@ -143,7 +143,7 @@ const card = (variant, w, h, x = 0, y = 0) => `
   .ws-resize { position:absolute; bottom:5px; right:5px; z-index:30;
                width:16px; height:16px; border-radius:5px;
                display:flex; align-items:center; justify-content:center;
-               font-size:11px; line-height:1; cursor:nwse-resize; opacity:0.42;
+               font-size:11px; line-height:1; cursor:nwse-resize; opacity:0.22;
                transition:opacity .15s ease; user-select:none;
                -webkit-user-select:none;
                color:${variant === "dark" ? T.onDarkMute : T.inkMute};
@@ -366,7 +366,6 @@ const PALETTES = ["midnight", "sakura", "seafoam", "tinplate"];
 const FRAMES = { idle: 3, walk: 10, look: 3, fidget: 4, blink: 1, jump: 1, fall: 2, land: 2, sleep: 2 };
 const FPS = { idle: 3, walk: 12, look: 4, fidget: 6, blink: 8, jump: 1, fall: 8, land: 8, sleep: 1.2 };
 const PORT = 41727;
-const FONTS = "window-pet.widget/fonts";
 
 export const command = String.raw`W="$HOME/.config/widgetsuite/windowd"; if [ -x "$W" ]; then "$W" --once; else osascript -l JavaScript <<'JXA'
 // Fallback window snapshot without a compiled helper: one JSON object on stdout.
@@ -398,24 +397,17 @@ export const refreshFrequency = 1000 * 2; // fallback cadence; the daemon stream
 export const className = `
   position: absolute; left: 0; top: 0; width: 100vw; height: 100vh;
   overflow: hidden; pointer-events: none; z-index: 40;
-  .pet { position:absolute; left:0; top:0; will-change: transform; pointer-events: auto; cursor: grab; touch-action: none; }
-  .pet.held { cursor: grabbing; }
+  .pet { position:absolute; left:0; top:0; will-change: transform; }
   .pet img { display:block; width:100%; height:100%; image-rendering: pixelated; -webkit-user-drag: none; }
   .pet.flip img { transform: scaleX(-1); }
   .shadow { position:absolute; left:18%; right:18%; bottom:-3px; height:6px; border-radius:50%; background: rgba(0,0,0,0.28); filter: blur(2px); }
-  @font-face { font-family: "Press Start 2P"; src: url("${FONTS}/PressStart2P-400.woff2") format("woff2"); }
-  .bubble { position:absolute; left:50%; bottom:100%; transform: translate(-50%, -12px); white-space:nowrap;
-            font: 7px/1.5 "Press Start 2P", monospace; text-transform:uppercase; color:#1D1D1B; background:#FFF8E7; padding: 7px 9px 5px;
-            box-shadow: 0 0 0 2px #1D1D1B, 0 0 0 4px #FFF8E7, 0 0 0 6px #1D1D1B, 6px 8px 0 4px rgba(0,0,0,0.35); animation: wp-pop .18s steps(3, end); }
-  .bubble::after { content:""; position:absolute; left:50%; top:100%; width:6px; height:6px; margin: 6px 0 0 -3px; background:#FFF8E7; box-shadow: 0 0 0 2px #1D1D1B, 0 6px 0 -1px #1D1D1B; }
-  .bubble.alert { background:#FFD98A; }
-  .bubble.alert::after { background:#FFD98A; }
-  @keyframes wp-pop { from { opacity:0; transform: translate(-50%, -4px); } to { opacity:1; transform: translate(-50%, -12px); } }
-  .zz { position:absolute; left: 70%; bottom: 90%; font: 8px/1 "Press Start 2P", monospace; color:#FFF8E7; text-shadow: 1px 1px 0 #1D1D1B, -1px -1px 0 #1D1D1B, 1px -1px 0 #1D1D1B, -1px 1px 0 #1D1D1B; animation: wp-zz 2.4s steps(6, end) infinite; opacity:0; }
-  .zz:nth-child(2) { animation-delay: .8s; } .zz:nth-child(3) { animation-delay: 1.6s; }
-  @keyframes wp-zz { 0% { opacity:0; transform: translate(0,0); } 15% { opacity:1; } 100% { opacity:0; transform: translate(14px, -26px); } }
-  .dust { position:absolute; bottom: -2px; left: 50%; width: 5px; height: 5px; background: rgba(230,226,216,0.9); box-shadow: 0 0 0 1px rgba(0,0,0,0.25); animation: wp-dust .45s steps(5, end) forwards; }
-  @keyframes wp-dust { 0% { opacity:1; transform: translate(0, 0); } 100% { opacity:0; transform: translate(var(--dx), -10px) scale(1.6); } }
+  .bubble { position:absolute; left:50%; bottom:100%; transform: translate(-50%, -8px); white-space:nowrap;
+            font-family:${mono}; font-size:9px; letter-spacing:1px; text-transform:uppercase; color:${T.ink};
+            background:${T.cardLight}; backdrop-filter: blur(12px); padding:6px 9px; border-radius:9px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.05); animation: wp-pop .25s ease-out; }
+  .bubble::after { content:""; position:absolute; left:50%; top:100%; margin-left:-4px; border:4px solid transparent; border-top-color:${T.cardLight}; }
+  .bubble.alert { color:${T.tintOrange}; }
+  @keyframes wp-pop { from { opacity:0; transform: translate(-50%, 0) scale(0.9); } to { opacity:1; transform: translate(-50%, -8px) scale(1); } }
   @media (prefers-reduced-motion: reduce) { .bubble { animation:none; } }
 `;
 
@@ -496,7 +488,6 @@ const Engine = (() => {
         if (pet.x < p.x1 || pet.x > p.x2) { pet.on = null; setState("fall", "fall"); pet.vy = 0; pet.vx = 0; }
       }
     } else if (pet.on === "floor") { pet.y = floorY; }
-    if (pet.held) { pet.anim = "look"; const n = FRAMES[pet.anim], fps = FPS[pet.anim]; if (pet.ft > 1 / fps) { pet.ft = 0; pet.frame = (pet.frame + 1) % n; } return; }
     switch (pet.state) {
       case "idle": case "look": case "fidget": case "blink": {
         pet.idleStreak += dt;
@@ -540,8 +531,8 @@ const Engine = (() => {
         pet.x = Math.max(S * 0.35, Math.min(innerWidth - S * 0.35, pet.x));
         if (pet.vy > 0) {
           const land = under(pet.x, py, pet.y);
-          if (land) { pet.y = land.y; pet.on = land.id; pet.onWin = land.win; pet.vx = 0; pet.vy = 0; pet.lands = (pet.lands || 0) + 1; setState("land", "land"); }
-          else if (pet.y >= floorY) { pet.y = floorY; pet.on = "floor"; pet.onWin = null; pet.vx = 0; pet.vy = 0; pet.lands = (pet.lands || 0) + 1; setState("land", "land"); }
+          if (land) { pet.y = land.y; pet.on = land.id; pet.onWin = land.win; pet.vx = 0; pet.vy = 0; setState("land", "land"); }
+          else if (pet.y >= floorY) { pet.y = floorY; pet.on = "floor"; pet.onWin = null; pet.vx = 0; pet.vy = 0; setState("land", "land"); }
         }
         break;
       }
@@ -552,23 +543,16 @@ const Engine = (() => {
     if (pet.ft > 1 / fps) { pet.ft = 0; pet.frame = (pet.frame + 1) % n; }
     if (pet.on === "floor" && pet.state === "idle" && pet.y !== floorY) pet.y = floorY;
   };
-  // A timer, not requestAnimationFrame: Übersicht's desktop WebView throttles
-  // rAF when it is not the front window, and the pet must keep moving.
-  let timer = null, lastT = 0;
-  const loop = () => {
-    const ts = performance.now(); const dt = Math.min(0.05, (ts - (lastT || ts)) / 1000); lastT = ts;
+  let raf = null, lastT = 0;
+  const loop = (ts) => {
+    const dt = Math.min(0.05, (ts - (lastT || ts)) / 1000); lastT = ts;
     if (!geo && !plats.length) { floorY = innerHeight; }
-    step(dt); notify();
+    step(dt); notify(); raf = requestAnimationFrame(loop);
   };
-  const start = () => { if (timer == null) { connect(); timer = setInterval(loop, 16); } };
+  const start = () => { if (raf == null) { connect(); raf = requestAnimationFrame(loop); } };
   const applyCfg = (c) => { if (!c) return; if (PALETTES.includes(c.palette)) cfg.palette = c.palette; if (c.size >= 40 && c.size <= 160) cfg.size = c.size; if (c.speed > 0) cfg.speed = c.speed; remember("windowpet-cfg", { palette: cfg.palette, size: cfg.size }); rebuild(); };
   const stopStream = () => { if (sse) { sse.close(); sse = null; } sseOK = false; };
-  // Interaction mode: pick the pet up and drop it, or tap it for a boop.
-  const pickUp = (x, y) => { pet.held = true; pet.on = null; pet.vx = 0; pet.vy = 0; pet.x = x; pet.y = y + cfg.size / 2; setState("fall", "look"); notify(); };
-  const dragTo = (x, y) => { if (!pet.held) return; pet.x = x; pet.y = y + cfg.size / 2; };
-  const drop = () => { if (!pet.held) return; pet.held = false; setState("fall", "fall"); pet.vy = 0; };
-  const boop = () => { if (pet.on) { pet.on = null; pet.vy = -300; pet.vx = 0; setState("jump", "jump"); } say("!", "", 1.2); pet.idleStreak = 0; };
-  return { pet, cfg, feed, setFleet, applyCfg, start, stopStream, pickUp, dragTo, drop, boop, tick: (dt) => step(dt), sub: (f) => { listeners.add(f); return () => listeners.delete(f); }, get sseOK() { return sseOK; }, get mood() { return mood; }, get plats() { return plats; } };
+  return { pet, cfg, feed, setFleet, applyCfg, start, stopStream, tick: (dt) => step(dt), sub: (f) => { listeners.add(f); return () => listeners.delete(f); }, get sseOK() { return sseOK; }, get mood() { return mood; }, get plats() { return plats; } };
 })();
 
 if (typeof window !== "undefined") window.__windowPet = Engine; // debug hook
@@ -582,27 +566,21 @@ function Pet() {
   const [, force] = React.useReducer((x) => x + 1, 0);
   React.useEffect(() => {
     preload(Engine.cfg.palette); Engine.start();
-    let lastAnim = "", lastFrame = -1, lastFlip = null, lastBubble = null, lastState = "";
+    let lastAnim = "", lastFrame = -1, lastFlip = null, lastBubble = null;
     return Engine.sub(() => {
       const p = Engine.pet, S = Engine.cfg.size, el = ref.current; if (!el) return;
       el.style.width = S + "px"; el.style.height = S + "px";
       el.style.transform = `translate3d(${Math.round(p.x - S / 2)}px, ${Math.round(p.y - S)}px, 0)`;
       const flip = p.dir < 0;
-      if (p.anim !== lastAnim || p.frame !== lastFrame || flip !== lastFlip || p.bubble !== lastBubble || p.state !== lastState) { lastAnim = p.anim; lastFrame = p.frame; lastFlip = flip; lastBubble = p.bubble; lastState = p.state; force(); }
+      if (p.anim !== lastAnim || p.frame !== lastFrame || flip !== lastFlip || p.bubble !== lastBubble) { lastAnim = p.anim; lastFrame = p.frame; lastFlip = flip; lastBubble = p.bubble; force(); }
     });
   }, []);
   const p = Engine.pet, pal = Engine.cfg.palette;
-  const press = React.useRef(null);
-  const onDown = (e) => { e.currentTarget.setPointerCapture(e.pointerId); press.current = { x: e.clientX, y: e.clientY, t: Date.now(), moved: false }; };
-  const onMove = (e) => { const s = press.current; if (!s) return; if (!s.moved && Math.hypot(e.clientX - s.x, e.clientY - s.y) > 6) { s.moved = true; Engine.pickUp(e.clientX, e.clientY); } if (s.moved) Engine.dragTo(e.clientX, e.clientY); };
-  const onUp = (e) => { const s = press.current; press.current = null; if (!s) return; if (s.moved) Engine.drop(); else Engine.boop(); };
   return (
-    <div className={`pet ${p.dir < 0 ? "flip" : ""} ${p.held ? "held" : ""}`} ref={ref} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
+    <div className={`pet ${p.dir < 0 ? "flip" : ""}`} ref={ref}>
       {p.on ? <div className="shadow" /> : null}
       <img src={`${SPR}/${pal}/${p.anim}_${p.frame}.png`} alt="" draggable={false} />
       {p.bubble ? <div className={`bubble ${p.bubble.kind || ""}`}>{p.bubble.text}</div> : null}
-      {p.state === "sleep" ? <><span className="zz">z</span><span className="zz">z</span><span className="zz">z</span></> : null}
-      {p.state === "land" ? [-16, -6, 6, 16].map((dx, i) => <i key={`${p.lands}-${i}`} className="dust" style={{ "--dx": `${dx}px`, marginLeft: `${dx / 2}px` }} />) : null}
     </div>
   );
 }

@@ -58,9 +58,8 @@ Blank widget? Run `./check.sh` for a pass/fail diagnosis, or see [docs/TROUBLESH
   Standing on a window means moving with it; if the window vanishes, the pet
   drops.
 - **Behavior.** Idle, look around, fidget, blink, walk, jump, sleep, on a
-  timer with some randomness. Calm mood sleeps after half a minute of nothing,
-  with pixel z's drifting up; landing kicks up a puff of dust; alert mood jumps
-  and shows a pixel speech bubble.
+  timer with some randomness. Calm mood sleeps after half a minute of nothing;
+  alert mood jumps and shows a bubble.
 - **Geometry.** `windowd` polls `CGWindowListCopyWindowInfo` twenty times a
   second and pushes a snapshot as server-sent events whenever something moved.
   Without it, the widget's command takes a snapshot every two seconds via
@@ -87,7 +86,6 @@ on-screen height in pixels (40 to 160).
 
 - `window-pet.widget/index.jsx` — the widget
 - `window-pet.widget/sprites/` — four palettes of frames
-- `window-pet.widget/fonts/` — Press Start 2P for the speech bubble, SIL Open Font License, see `fonts/OFL.txt`
 - `setup/windowd.swift` — the geometry daemon
 - `setup/windows.jxa` — the fallback snapshot script
 - `setup/configure.sh` — compiles the daemon and installs the LaunchAgent
